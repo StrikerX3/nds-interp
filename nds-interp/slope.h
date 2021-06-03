@@ -124,6 +124,15 @@ public:
         i32 dy = (y1 - y0);
         m_xMajor = (dx >= dy);
 
+        // Precompute bias for X-major slopes
+        if (m_xMajor) {
+            if (m_negative) {
+                m_x0 -= kBias;
+            } else {
+                m_x0 += kBias;
+            }
+        }
+
         // Compute X displacement per scanline
         m_dx = dx;
         m_dx *= kOne / dy; // This ensures the division is performed before the multiplication
@@ -136,7 +145,6 @@ public:
     /// <returns>The starting X coordinate of the specified scanline's span</returns>
     constexpr i32 FracXStart(i32 y) const {
         i32 displacement = (y - m_y0) * m_dx;
-        if (m_xMajor) displacement += kBias;
         if (m_negative) {
             return m_x0 - displacement;
         } else {
