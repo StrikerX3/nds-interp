@@ -106,7 +106,6 @@ public:
             std::swap(x0, x1);
             std::swap(y0, y1);
         }
-        if (y0 == y1) y1++;
 
         // Store reference coordinates
         m_x0 = x0 << kFracBits;
@@ -122,10 +121,10 @@ public:
         // Compute coordinate deltas and determine if the slope is X-major
         i32 dx = (x1 - x0);
         i32 dy = (y1 - y0);
-        m_xMajor = (dx >= dy);
+        m_xMajor = (dx > dy);
 
-        // Precompute bias for X-major slopes
-        if (m_xMajor) {
+        // Precompute bias for X-major or diagonal slopes
+        if (m_xMajor || dx == dy) {
             if (m_negative) {
                 m_x0 -= kBias;
             } else {
@@ -135,7 +134,11 @@ public:
 
         // Compute X displacement per scanline
         m_dx = dx;
-        m_dx *= kOne / dy; // This ensures the division is performed before the multiplication
+        if (dy != 0) {
+            m_dx *= kOne / dy; // This ensures the division is performed before the multiplication
+        } else {
+            m_dx *= kOne;
+        }
     }
 
     /// <summary>
@@ -196,7 +199,7 @@ public:
     /// <summary>
     /// Determines if the slope is X-major.
     /// </summary>
-    /// <returns>true if the slope is X-major or diagonal.</returns>
+    /// <returns>true if the slope is X-major.</returns>
     constexpr bool IsXMajor() const { return m_xMajor; }
 
     /// <summary>
@@ -210,5 +213,5 @@ private:
     i32 m_y0;        // Y0 coordinate
     i32 m_dx;        // X displacement per scanline
     bool m_negative; // True if the slope is negative (X1 < X0)
-    bool m_xMajor;   // True if the slope is X-major or diagonal (X1-X0 >= Y1-Y0)
+    bool m_xMajor;   // True if the slope is X-major (X1-X0 > Y1-Y0)
 };
